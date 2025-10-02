@@ -8,17 +8,40 @@ on:
       - main
     paths:
       - 'migrations/**'
+      - 'terraform/**'
 
   workflow_dispatch:
 
 jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      migrations: ${{ steps.filter.outputs.migrations }}
+      terraform: ${{ steps.filter.outputs.terraform }}
+
+    steps:
+      - name: Retrieve repository
+        uses: actions/checkout@v4
+
+      - name: Detect changed paths
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            migrations:
+              - 'migrations/**'
+            terraform:
+              - 'terraform/**'
+
   schema-change-job:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.migrations == 'true'
     runs-on: ubuntu-latest
 
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Retrieve repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Use Python 3.8.x
         uses: actions/setup-python@v2.2.1
@@ -36,3 +59,36 @@ jobs:
         run: |
           pip install schemachange
           schemachange -f $GITHUB_WORKSPACE/migrations -a $SNOWFLAKE_ACCOUNT -u $SNOWFLAKE_USERNAME -r $SNOWFLAKE_ROLE -w $SNOWFLAKE_WAREHOUSE -d $SNOWFLAKE_DATABASE -c $SNOWFLAKE_DATABASE.SCHEMACHANGE.CHANGE_HISTORY --create-change-history-table
+
+  terraform-job:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.terraform == 'true'
+    runs-on: ubuntu-latest
+    env:
+      TF_VAR_organization_name: ${{ secrets.SF_ORGANIZATION_NAME }}
+      TF_VAR_account_name: ${{ secrets.SF_ACCOUNT_NAME }}
+      TF_VAR_admin_user: ${{ secrets.SF_USERNAME }}
+      TF_VAR_admin_password: ${{ secrets.SF_PASSWORD }}
+
+    steps:
+      - name: Retrieve repository
+        uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Terraform fmt
+        run: terraform fmt -check
+        working-directory: terraform
+
+      - name: Terraform init
+        run: terraform init
+        working-directory: terraform
+
+      - name: Terraform validate
+        run: terraform validate
+        working-directory: terraform
+
+      - name: Terraform plan
+        run: terraform plan
+        working-directory: terraform

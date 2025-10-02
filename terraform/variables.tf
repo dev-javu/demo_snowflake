@@ -1,23 +1,20 @@
 variable "organization_name" {
   type        = string
   description = "Organization identifier for the Snowflake account."
-  default     = "ztxvmsf"
 }
 
 variable "account_name" {
   type        = string
   description = "Account identifier within the Snowflake organization."
-  default     = "nm92370"
 }
 
-variable "private_key_path" {
+variable "admin_user" {
   type        = string
-  description = "Path to the private key used for Snowflake JWT authentication."
-  default     = "~/.ssh/rsa_key.p8"
+  description = "Username Terraform uses to authenticate against Snowflake."
 }
 
-variable "private_key_passphrase" {
+variable "admin_password" {
   type        = string
-  description = "Passphrase for the private key used with Snowflake JWT authentication."
+  description = "Password for the Snowflake user Terraform uses."
   sensitive   = true
 }

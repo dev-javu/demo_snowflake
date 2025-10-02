@@ -1,11 +1,13 @@
 variable "organization_name" {
   type        = string
   description = "Organization identifier for the Snowflake account."
+  default     = "ZTXVMSF"
 }
 
 variable "account_name" {
   type        = string
   description = "Account identifier within the Snowflake organization."
+  default     = "NM92370"
 }
 
 variable "admin_user" {

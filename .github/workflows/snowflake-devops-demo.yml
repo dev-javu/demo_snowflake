@@ -65,8 +65,6 @@ jobs:
     if: needs.detect-changes.outputs.terraform == 'true'
     runs-on: ubuntu-latest
     env:
-      TF_VAR_organization_name: ${{ secrets.SF_ORGANIZATION_NAME }}
-      TF_VAR_account_name: ${{ secrets.SF_ACCOUNT_NAME }}
       TF_VAR_admin_user: ${{ secrets.SF_USERNAME }}
       TF_VAR_admin_password: ${{ secrets.SF_PASSWORD }}
 

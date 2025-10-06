@@ -10,6 +10,7 @@ provider "snowflake" {
   account_name      = var.account_name
   user              = var.admin_user
   private_key       = file(var.admin_private_key_path)
+  private_key_passphrase = var.private_key_passphrase
   authenticator     = "SNOWFLAKE_JWT"
   role              = "ACCOUNTADMIN"
   warehouse         = "DEMO_WH"
@@ -45,6 +46,7 @@ provider "snowflake" {
   account_name      = var.account_name
   user              = var.admin_user
   private_key       = file(var.admin_private_key_path)
+  private_key_passphrase = var.private_key_passphrase
   authenticator     = "SNOWFLAKE_JWT"
   role              = "USERADMIN"
   alias             = "useradmin"

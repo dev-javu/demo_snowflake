@@ -65,6 +65,7 @@ jobs:
           SNOWFLAKE_WAREHOUSE: ${{ secrets.SF_WAREHOUSE }}
           SNOWFLAKE_DATABASE: ${{ secrets.SF_DATABASE }}
           SNOWFLAKE_PRIVATE_KEY_PATH: ${{ env.SNOWFLAKE_PRIVATE_KEY_PATH }}
+          SNOWFLAKE_PRIVATE_KEY_PASSPHRASE: ${{ secrets.SF_PRIVATE_KEY_PASSPHRASE }}
         run: |
           pip install schemachange
           schemachange -f $GITHUB_WORKSPACE/migrations -a $SNOWFLAKE_ACCOUNT -u $SNOWFLAKE_USERNAME -r $SNOWFLAKE_ROLE -w $SNOWFLAKE_WAREHOUSE -d $SNOWFLAKE_DATABASE --private-key-path $SNOWFLAKE_PRIVATE_KEY_PATH --private-key-passphrase $SNOWFLAKE_PRIVATE_KEY_PASSPHRASE -c $SNOWFLAKE_DATABASE.SCHEMACHANGE.CHANGE_HISTORY --create-change-history-table

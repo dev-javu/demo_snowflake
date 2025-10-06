@@ -52,6 +52,11 @@ jobs:
         env:
           SF_PRIVATE_KEY_B64: ${{ secrets.SF_PRIVATE_KEY_B64 }}
           SF_PRIVATE_KEY_PASSPHRASE: ${{ secrets.SF_PRIVATE_KEY_PASSPHRASE }}
+          SF_ACCOUNT: ${{ secrets.SF_ACCOUNT }}
+          SF_USERNAME: ${{ secrets.SF_USERNAME }}
+          SF_ROLE: ${{ secrets.SF_ROLE }}
+          SF_WAREHOUSE: ${{ secrets.SF_WAREHOUSE }}
+          SF_DATABASE: ${{ secrets.SF_DATABASE }}
         run: |
           echo "$SF_PRIVATE_KEY_B64" | base64 --decode > $RUNNER_TEMP/snowflake_key.p8
           chmod 600 $RUNNER_TEMP/snowflake_key.p8
@@ -66,14 +71,14 @@ jobs:
         run: |
           cat <<EOF > connections.toml
           [connections.default]
-          account = "${{ secrets.SF_ACCOUNT }}"
-          user = "${{ secrets.SF_USERNAME }}"
-          role = "${{ secrets.SF_ROLE }}"
-          warehouse = "${{ secrets.SF_WAREHOUSE }}"
-          database = "${{ secrets.SF_DATABASE }}"
+          account = "${{ env.SF_ACCOUNT }}"
+          user = "${{ env.SF_USERNAME }}"
+          role = "${{ env.SF_ROLE }}"
+          warehouse = "${{ env.SF_WAREHOUSE }}"
+          database = "${{ env.SF_DATABASE }}"
           authenticator = "snowflake_jwt"
           private_key_file = "${{ env.SNOWFLAKE_PRIVATE_KEY_PATH }}"
-          private_key_file_pwd = "${{ secrets.SF_PRIVATE_KEY_PASSPHRASE }}"
+          private_key_file_pwd = "${{ env.SF_PRIVATE_KEY_PASSPHRASE }}"
           EOF
 
       - name: Fix connections.toml permissions
@@ -84,7 +89,6 @@ jobs:
       - name: Debug connections.toml
         run: |
           echo "Connections config:"
-          grep -v "user" connections.toml
           grep -v "private_key_file_pwd" connections.toml
 
       - name: Execute schemachange

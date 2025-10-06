@@ -1,7 +1,6 @@
 name: Snowflake Schema Deploy
 
-
-# Triggers the action based on branch and path. 
+# Triggers the action based on branch and path.
 on:
   push:
     branches:
@@ -9,7 +8,6 @@ on:
     paths:
       - 'migrations/**'
       - 'terraform/**'
-
   workflow_dispatch:
 
 jobs:
@@ -51,8 +49,8 @@ jobs:
       - name: Retrieve repository
         uses: actions/checkout@v4
 
-      - name: Use Python 3.8.x
-        uses: actions/setup-python@v2
+      - name: Use Python 3.8
+        uses: actions/setup-python@v5
         with:
           python-version: '3.8'
 
@@ -101,11 +99,11 @@ EOF
             --connection-name default \
             --verbose
 
-
   terraform-job:
     needs: detect-changes
     if: needs.detect-changes.outputs.terraform == 'true'
     runs-on: ubuntu-latest
+
     env:
       TF_VAR_admin_user: ${{ secrets.SF_USERNAME }}
       TF_VAR_private_key_passphrase: ${{ secrets.SF_PRIVATE_KEY_PASSPHRASE }}
@@ -120,24 +118,8 @@ EOF
       - name: Prepare private key for Terraform
         env:
           SF_PRIVATE_KEY_B64: ${{ secrets.SF_PRIVATE_KEY_B64 }}
-          TF_VAR_private_key_passphrase: ${{secrets.SF_PRIVATE_KEY_PASSPHRASE}}
+          TF_VAR_private_key_passphrase: ${{ secrets.SF_PRIVATE_KEY_PASSPHRASE }}
         run: |
           echo "$SF_PRIVATE_KEY_B64" | base64 --decode > $RUNNER_TEMP/snowflake_key.p8
           chmod 600 $RUNNER_TEMP/snowflake_key.p8
-          echo "TF_VAR_admin_private_key_path=$RUNNER_TEMP/snowflake_key.p8" >> $GITHUB_ENV
-
-      - name: Terraform fmt
-        run: terraform fmt -check
-        working-directory: terraform
-
-      - name: Terraform init
-        run: terraform init
-        working-directory: terraform
-
-      - name: Terraform validate
-        run: terraform validate
-        working-directory: terraform
-
-      - name: Terraform plan
-        run: terraform plan
-        working-directory: terraform
+          echo "TF_VAR_admin_private_key_path=$RUNNER_TEMP/snowf

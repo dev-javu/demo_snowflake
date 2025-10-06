@@ -68,7 +68,7 @@ jobs:
       - name: Create schemachange connection config
         run: |
           cat <<EOF > connections.toml
-          [connections.default]
+          [default]
           account = "${{ env.SNOWFLAKE_ACCOUNT }}"
           user = "${{ env.SNOWFLAKE_USERNAME }}"
           role = "${{ env.SNOWFLAKE_ROLE }}"

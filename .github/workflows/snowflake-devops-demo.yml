@@ -122,4 +122,20 @@ jobs:
         run: |
           echo "$SF_PRIVATE_KEY_B64" | base64 --decode > $RUNNER_TEMP/snowflake_key.p8
           chmod 600 $RUNNER_TEMP/snowflake_key.p8
-          echo "TF_VAR_admin_private_key_path=$RUNNER_TEMP/snowf
+          echo "TF_VAR_admin_private_key_path=$RUNNER_TEMP/snowflake_key.p8" >> $GITHUB_ENV
+
+      - name: Terraform fmt
+        run: terraform fmt -check
+        working-directory: terraform
+
+      - name: Terraform init
+        run: terraform init
+        working-directory: terraform
+
+      - name: Terraform validate
+        run: terraform validate
+        working-directory: terraform
+
+      - name: Terraform plan
+        run: terraform plan
+        working-directory: terraform

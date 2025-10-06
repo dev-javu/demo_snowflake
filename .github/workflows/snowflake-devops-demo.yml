@@ -51,6 +51,7 @@ jobs:
       - name: Prepare private key
         env:
           SF_PRIVATE_KEY_B64: ${{ secrets.SF_PRIVATE_KEY_B64 }}
+          SF_PRIVATE_KEY_PASSPHRASE: ${{ secrets.SF_PRIVATE_KEY_PASSPHRASE }}
         run: |
           echo "$SF_PRIVATE_KEY_B64" | base64 --decode > $RUNNER_TEMP/snowflake_key.p8
           chmod 600 $RUNNER_TEMP/snowflake_key.p8
@@ -66,7 +67,7 @@ jobs:
           SNOWFLAKE_PRIVATE_KEY_PATH: ${{ env.SNOWFLAKE_PRIVATE_KEY_PATH }}
         run: |
           pip install schemachange
-          schemachange -f $GITHUB_WORKSPACE/migrations -a $SNOWFLAKE_ACCOUNT -u $SNOWFLAKE_USERNAME -r $SNOWFLAKE_ROLE -w $SNOWFLAKE_WAREHOUSE -d $SNOWFLAKE_DATABASE --private-key-path $SNOWFLAKE_PRIVATE_KEY_PATH -c $SNOWFLAKE_DATABASE.SCHEMACHANGE.CHANGE_HISTORY --create-change-history-table
+          schemachange -f $GITHUB_WORKSPACE/migrations -a $SNOWFLAKE_ACCOUNT -u $SNOWFLAKE_USERNAME -r $SNOWFLAKE_ROLE -w $SNOWFLAKE_WAREHOUSE -d $SNOWFLAKE_DATABASE --private-key-path $SNOWFLAKE_PRIVATE_KEY_PATH --private-key-passphrase $SNOWFLAKE_PRIVATE_KEY_PASSPHRASE -c $SNOWFLAKE_DATABASE.SCHEMACHANGE.CHANGE_HISTORY --create-change-history-table
 
   terraform-job:
     needs: detect-changes
@@ -74,6 +75,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       TF_VAR_admin_user: ${{ secrets.SF_USERNAME }}
+      SF_PRIVATE_KEY_PASSPHRASE: ${{ secrets.SF_PRIVATE_KEY_PASSPHRASE }}
 
     steps:
       - name: Retrieve repository
@@ -85,6 +87,7 @@ jobs:
       - name: Prepare private key for Terraform
         env:
           SF_PRIVATE_KEY_B64: ${{ secrets.SF_PRIVATE_KEY_B64 }}
+          TF_VAR_private_key_passphrase: ${{secrets.private_key_passphrase}}
         run: |
           echo "$SF_PRIVATE_KEY_B64" | base64 --decode > $RUNNER_TEMP/snowflake_key.p8
           chmod 600 $RUNNER_TEMP/snowflake_key.p8

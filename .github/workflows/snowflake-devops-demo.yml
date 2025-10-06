@@ -84,6 +84,7 @@ jobs:
       - name: Debug connections.toml
         run: |
           echo "Connections config:"
+          grep -v "user" connections.toml
           grep -v "private_key_file_pwd" connections.toml
 
       - name: Execute schemachange

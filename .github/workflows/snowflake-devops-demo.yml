@@ -78,8 +78,6 @@ jobs:
 
       - name: Execute schemachange
         run: |
-          - name: Run schemachange migration
-        run: |
           schemachange deploy \
             -f $GITHUB_WORKSPACE/migrations \
             -c $SNOWFLAKE_DATABASE.SCHEMACHANGE.CHANGE_HISTORY \

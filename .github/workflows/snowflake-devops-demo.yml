@@ -82,6 +82,7 @@ jobs:
             -f $GITHUB_WORKSPACE/migrations \
             -c $SNOWFLAKE_DATABASE.SCHEMACHANGE.CHANGE_HISTORY \
             --create-change-history-table \
+            --connections-file $GITHUB_WORKSPACE/connections.toml \
             --connection-name default \
             --verbose
 

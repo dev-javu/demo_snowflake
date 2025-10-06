@@ -68,16 +68,16 @@ jobs:
       - name: Create schemachange connection config
         run: |
           cat <<EOF > connections.toml
-[connections.default]
-account = "${{ env.SNOWFLAKE_ACCOUNT }}"
-user = "${{ env.SNOWFLAKE_USERNAME }}"
-role = "${{ env.SNOWFLAKE_ROLE }}"
-warehouse = "${{ env.SNOWFLAKE_WAREHOUSE }}"
-database = "${{ env.SNOWFLAKE_DATABASE }}"
-authenticator = "snowflake_jwt"
-private_key_file = "${{ env.SNOWFLAKE_PRIVATE_KEY_PATH }}"
-private_key_file_pwd = "${{ env.SNOWFLAKE_PRIVATE_KEY_PASSPHRASE }}"
-EOF
+          [connections.default]
+          account = "${{ env.SNOWFLAKE_ACCOUNT }}"
+          user = "${{ env.SNOWFLAKE_USERNAME }}"
+          role = "${{ env.SNOWFLAKE_ROLE }}"
+          warehouse = "${{ env.SNOWFLAKE_WAREHOUSE }}"
+          database = "${{ env.SNOWFLAKE_DATABASE }}"
+          authenticator = "snowflake_jwt"
+          private_key_file = "${{ env.SNOWFLAKE_PRIVATE_KEY_PATH }}"
+          private_key_file_pwd = "${{ env.SNOWFLAKE_PRIVATE_KEY_PASSPHRASE }}"
+          EOF
 
       - name: Fix connections.toml permissions
         run: |

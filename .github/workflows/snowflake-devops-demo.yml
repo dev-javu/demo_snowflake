@@ -88,7 +88,7 @@ jobs:
       - name: Prepare private key for Terraform
         env:
           SF_PRIVATE_KEY_B64: ${{ secrets.SF_PRIVATE_KEY_B64 }}
-          TF_VAR_private_key_passphrase: ${{secrets.private_key_passphrase}}
+          TF_VAR_private_key_passphrase: ${{secrets.SF_PRIVATE_KEY_PASSPHRASE}}
         run: |
           echo "$SF_PRIVATE_KEY_B64" | base64 --decode > $RUNNER_TEMP/snowflake_key.p8
           chmod 600 $RUNNER_TEMP/snowflake_key.p8

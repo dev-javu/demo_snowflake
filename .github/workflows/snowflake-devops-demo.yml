@@ -40,22 +40,21 @@ jobs:
 
     env:
       SF_PRIVATE_KEY_B64: ${{ secrets.SF_PRIVATE_KEY_B64 }}
-      SF_PRIVATE_KEY_PASSPHRASE: ${{ secrets.SF_PRIVATE_KEY_PASSPHRASE }}
-      SF_ACCOUNT: ${{ secrets.SF_ACCOUNT }}
-      SF_USERNAME: ${{ secrets.SF_USERNAME }}
-      SF_ROLE: ${{ secrets.SF_ROLE }}
-      SF_WAREHOUSE: ${{ secrets.SF_WAREHOUSE }}
-      SF_DATABASE: ${{ secrets.SF_DATABASE }}
+      SNOWFLAKE_PRIVATE_KEY_PASSPHRASE: ${{ secrets.SF_PRIVATE_KEY_PASSPHRASE }}
+      SNOWFLAKE_ACCOUNT: ${{ secrets.SF_ACCOUNT }}
+      SNOWFLAKE_USERNAME: ${{ secrets.SF_USERNAME }}
+      SNOWFLAKE_ROLE: ${{ secrets.SF_ROLE }}
+      SNOWFLAKE_WAREHOUSE: ${{ secrets.SF_WAREHOUSE }}
+      SNOWFLAKE_DATABASE: ${{ secrets.SF_DATABASE }}
 
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Retrieve repository
         uses: actions/checkout@v4
 
       - name: Use Python 3.8.x
-        uses: actions/setup-python@v2.2.1
+        uses: actions/setup-python@v2
         with:
-          python-version: 3.8.x
+          python-version: '3.8'
 
       - name: Prepare private key
         run: |
@@ -66,20 +65,20 @@ jobs:
       - name: Install schemachange
         run: |
           pip install --upgrade pip
-          pip install schemachange
+          pip install schemachange==4.0.1
 
       - name: Create schemachange connection config
         run: |
           cat <<EOF > connections.toml
           [connections.default]
-          account = "${{ env.SF_ACCOUNT }}"
-          user = "${{ env.SF_USERNAME }}"
-          role = "${{ env.SF_ROLE }}"
-          warehouse = "${{ env.SF_WAREHOUSE }}"
-          database = "${{ env.SF_DATABASE }}"
+          account = "${{ env.SNOWFLAKE_ACCOUNT }}"
+          user = "${{ env.SNOWFLAKE_USERNAME }}"
+          role = "${{ env.SNOWFLAKE_ROLE }}"
+          warehouse = "${{ env.SNOWFLAKE_WAREHOUSE }}"
+          database = "${{ env.SNOWFLAKE_DATABASE }}"
           authenticator = "snowflake_jwt"
           private_key_file = "${{ env.SNOWFLAKE_PRIVATE_KEY_PATH }}"
-          private_key_file_pwd = "${{ env.SF_PRIVATE_KEY_PASSPHRASE }}"
+          private_key_file_pwd = "${{ env.SNOWFLAKE_PRIVATE_KEY_PASSPHRASE }}"
           EOF
 
       - name: Fix connections.toml permissions
@@ -89,7 +88,7 @@ jobs:
 
       - name: Debug connections.toml
         run: |
-          echo "Connections config:"
+          echo "Connections config (sanitized):"
           grep -v "private_key_file_pwd" connections.toml
 
       - name: Execute schemachange
@@ -99,8 +98,9 @@ jobs:
             -c $SNOWFLAKE_DATABASE.SCHEMACHANGE.CHANGE_HISTORY \
             --create-change-history-table \
             --connections-file $GITHUB_WORKSPACE/connections.toml \
-            --connection-name connections \
+            --connection-name default \
             --verbose
+
 
   terraform-job:
     needs: detect-changes

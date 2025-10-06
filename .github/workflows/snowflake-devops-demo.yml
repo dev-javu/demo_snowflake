@@ -76,6 +76,11 @@ jobs:
           private_key_file_pwd = "${{ secrets.SF_PRIVATE_KEY_PASSPHRASE }}"
           EOF
 
+      - name: Debug connections.toml
+        run: |
+          echo "Contents of connections.toml:"
+          cat connections.toml
+
       - name: Execute schemachange
         run: |
           schemachange deploy \

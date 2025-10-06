@@ -57,18 +57,35 @@ jobs:
           chmod 600 $RUNNER_TEMP/snowflake_key.p8
           echo "SNOWFLAKE_PRIVATE_KEY_PATH=$RUNNER_TEMP/snowflake_key.p8" >> $GITHUB_ENV
 
-      - name: Execute schemachange
-        env:
-          SNOWFLAKE_ACCOUNT: ${{ secrets.SF_ACCOUNT }}
-          SNOWFLAKE_USERNAME: ${{ secrets.SF_USERNAME }}
-          SNOWFLAKE_ROLE: ${{ secrets.SF_ROLE }}
-          SNOWFLAKE_WAREHOUSE: ${{ secrets.SF_WAREHOUSE }}
-          SNOWFLAKE_DATABASE: ${{ secrets.SF_DATABASE }}
-          SNOWFLAKE_PRIVATE_KEY_PATH: ${{ env.SNOWFLAKE_PRIVATE_KEY_PATH }}
-          SNOWFLAKE_PRIVATE_KEY_PASSPHRASE: ${{ secrets.SF_PRIVATE_KEY_PASSPHRASE }}
+      - name: Install schemachange
         run: |
+          pip install --upgrade pip
           pip install schemachange
-          schemachange -f $GITHUB_WORKSPACE/migrations -a $SNOWFLAKE_ACCOUNT -u $SNOWFLAKE_USERNAME -r $SNOWFLAKE_ROLE -w $SNOWFLAKE_WAREHOUSE -d $SNOWFLAKE_DATABASE --private-key-path $SNOWFLAKE_PRIVATE_KEY_PATH --private-key-passphrase $SNOWFLAKE_PRIVATE_KEY_PASSPHRASE -c $SNOWFLAKE_DATABASE.SCHEMACHANGE.CHANGE_HISTORY --create-change-history-table
+
+      - name: Create schemachange connection config
+        run: |
+          cat <<EOF > connections.toml
+          [connections.default]
+          account = "${{ secrets.SF_ACCOUNT }}"
+          user = "${{ secrets.SF_USERNAME }}"
+          role = "${{ secrets.SF_ROLE }}"
+          warehouse = "${{ secrets.SF_WAREHOUSE }}"
+          database = "${{ secrets.SF_DATABASE }}"
+          authenticator = "snowflake_jwt"
+          private_key_file = "${{ env.SNOWFLAKE_PRIVATE_KEY_PATH }}"
+          private_key_file_pwd = "${{ secrets.SF_PRIVATE_KEY_PASSPHRASE }}"
+          EOF
+
+      - name: Execute schemachange
+        run: |
+          - name: Run schemachange migration
+        run: |
+          schemachange deploy \
+            -f $GITHUB_WORKSPACE/migrations \
+            -c $SNOWFLAKE_DATABASE.SCHEMACHANGE.CHANGE_HISTORY \
+            --create-change-history-table \
+            --connection-name default \
+            --verbose
 
   terraform-job:
     needs: detect-changes

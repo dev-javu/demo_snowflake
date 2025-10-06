@@ -15,8 +15,7 @@ variable "admin_user" {
   description = "Username Terraform uses to authenticate against Snowflake."
 }
 
-variable "admin_password" {
+variable "admin_private_key_path" {
   type        = string
-  description = "Password for the Snowflake user Terraform uses."
-  sensitive   = true
+  description = "Filesystem path to the PEM encoded private key Terraform uses."
 }

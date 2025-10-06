@@ -48,6 +48,14 @@ jobs:
         with:
           python-version: 3.8.x
 
+      - name: Prepare private key
+        env:
+          SF_PRIVATE_KEY_B64: ${{ secrets.SF_PRIVATE_KEY_B64 }}
+        run: |
+          echo "$SF_PRIVATE_KEY_B64" | base64 --decode > $RUNNER_TEMP/snowflake_key.p8
+          chmod 600 $RUNNER_TEMP/snowflake_key.p8
+          echo "SNOWFLAKE_PRIVATE_KEY_PATH=$RUNNER_TEMP/snowflake_key.p8" >> $GITHUB_ENV
+
       - name: Execute schemachange
         env:
           SNOWFLAKE_ACCOUNT: ${{ secrets.SF_ACCOUNT }}
@@ -55,10 +63,10 @@ jobs:
           SNOWFLAKE_ROLE: ${{ secrets.SF_ROLE }}
           SNOWFLAKE_WAREHOUSE: ${{ secrets.SF_WAREHOUSE }}
           SNOWFLAKE_DATABASE: ${{ secrets.SF_DATABASE }}
-          SNOWFLAKE_PASSWORD: ${{ secrets.SF_PASSWORD }}
+          SNOWFLAKE_PRIVATE_KEY_PATH: ${{ env.SNOWFLAKE_PRIVATE_KEY_PATH }}
         run: |
           pip install schemachange
-          schemachange -f $GITHUB_WORKSPACE/migrations -a $SNOWFLAKE_ACCOUNT -u $SNOWFLAKE_USERNAME -r $SNOWFLAKE_ROLE -w $SNOWFLAKE_WAREHOUSE -d $SNOWFLAKE_DATABASE -c $SNOWFLAKE_DATABASE.SCHEMACHANGE.CHANGE_HISTORY --create-change-history-table
+          schemachange -f $GITHUB_WORKSPACE/migrations -a $SNOWFLAKE_ACCOUNT -u $SNOWFLAKE_USERNAME -r $SNOWFLAKE_ROLE -w $SNOWFLAKE_WAREHOUSE -d $SNOWFLAKE_DATABASE --private-key-path $SNOWFLAKE_PRIVATE_KEY_PATH -c $SNOWFLAKE_DATABASE.SCHEMACHANGE.CHANGE_HISTORY --create-change-history-table
 
   terraform-job:
     needs: detect-changes
@@ -66,7 +74,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       TF_VAR_admin_user: ${{ secrets.SF_USERNAME }}
-      TF_VAR_admin_password: ${{ secrets.SF_PASSWORD }}
 
     steps:
       - name: Retrieve repository
@@ -74,6 +81,14 @@ jobs:
 
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
+
+      - name: Prepare private key for Terraform
+        env:
+          SF_PRIVATE_KEY_B64: ${{ secrets.SF_PRIVATE_KEY_B64 }}
+        run: |
+          echo "$SF_PRIVATE_KEY_B64" | base64 --decode > $RUNNER_TEMP/snowflake_key.p8
+          chmod 600 $RUNNER_TEMP/snowflake_key.p8
+          echo "TF_VAR_admin_private_key_path=$RUNNER_TEMP/snowflake_key.p8" >> $GITHUB_ENV
 
       - name: Terraform fmt
         run: terraform fmt -check

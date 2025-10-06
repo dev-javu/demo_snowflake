@@ -9,7 +9,7 @@ provider "snowflake" {
   organization_name = var.organization_name
   account_name      = var.account_name
   user              = var.admin_user
-  password          = var.admin_password
+  private_key       = var.admin_private_key_path
   role              = "ACCOUNTADMIN"
   warehouse         = "DEMO_WH"
 }
@@ -43,7 +43,7 @@ provider "snowflake" {
   organization_name = var.organization_name
   account_name      = var.account_name
   user              = var.admin_user
-  password          = var.admin_password
+  private_key       = var.admin_private_key_path
   role              = "USERADMIN"
   alias             = "useradmin"
 }

@@ -9,7 +9,7 @@ provider "snowflake" {
   organization_name = var.organization_name
   account_name      = var.account_name
   user              = var.admin_user
-  private_key       = var.admin_private_key_path
+  private_key       = file(var.admin_private_key_path)
   authenticator     = "SNOWFLAKE_JWT"
   role              = "ACCOUNTADMIN"
   warehouse         = "DEMO_WH"

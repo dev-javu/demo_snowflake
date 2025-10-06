@@ -6,14 +6,14 @@ terraform {
   }
 }
 provider "snowflake" {
-  organization_name = var.organization_name
-  account_name      = var.account_name
-  user              = var.admin_user
-  private_key       = file(var.admin_private_key_path)
+  organization_name      = var.organization_name
+  account_name           = var.account_name
+  user                   = var.admin_user
+  private_key            = file(var.admin_private_key_path)
   private_key_passphrase = var.private_key_passphrase
-  authenticator     = "SNOWFLAKE_JWT"
-  role              = "ACCOUNTADMIN"
-  warehouse         = "DEMO_WH"
+  authenticator          = "SNOWFLAKE_JWT"
+  role                   = "ACCOUNTADMIN"
+  warehouse              = "DEMO_WH"
 }
 
 resource "snowflake_database" "tf_db" {
@@ -42,14 +42,14 @@ resource "snowflake_schema" "tf_db_tf_schema" {
 
 # New provider that will use USERADMIN to create users, roles, and grants
 provider "snowflake" {
-  organization_name = var.organization_name
-  account_name      = var.account_name
-  user              = var.admin_user
-  private_key       = file(var.admin_private_key_path)
+  organization_name      = var.organization_name
+  account_name           = var.account_name
+  user                   = var.admin_user
+  private_key            = file(var.admin_private_key_path)
   private_key_passphrase = var.private_key_passphrase
-  authenticator     = "SNOWFLAKE_JWT"
-  role              = "USERADMIN"
-  alias             = "useradmin"
+  authenticator          = "SNOWFLAKE_JWT"
+  role                   = "USERADMIN"
+  alias                  = "useradmin"
 }
 
 # Create a new role using USERADMIN

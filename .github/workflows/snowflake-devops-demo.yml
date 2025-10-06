@@ -76,6 +76,11 @@ jobs:
           private_key_file_pwd = "${{ secrets.SF_PRIVATE_KEY_PASSPHRASE }}"
           EOF
 
+      - name: Fix connections.toml permissions
+        run: |
+          chmod 600 connections.toml
+          sudo chown $USER connections.toml || true
+
       - name: Debug connections.toml
         run: |
           echo "Contents of connections.toml:"

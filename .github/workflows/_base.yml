@@ -53,9 +53,17 @@ jobs:
       SNOWFLAKE_ROLE: ${{ secrets.SF_ROLE }}
       SNOWFLAKE_WAREHOUSE: ${{ secrets.SF_WAREHOUSE }}
       SNOWFLAKE_DATABASE: ${{ secrets.SF_DATABASE }}
+      SCHEMAS_CHANGED: ${{ needs.detect-changes.outputs.schemas }}
+      TABLES_CHANGED: ${{ needs.detect-changes.outputs.tables }}
+      VIEWS_CHANGED: ${{ needs.detect-changes.outputs.views }}
+      PROCEDURES_CHANGED: ${{ needs.detect-changes.outputs.procedures }}
+      TASKS_CHANGED: ${{ needs.detect-changes.outputs.tasks }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Retrieve repository
+        uses: actions/checkout@v4
+
+      - name: Use Python 3.8
+        uses: actions/setup-python@v5
         with:
           python-version: '3.8'
 
@@ -95,12 +103,6 @@ jobs:
           grep -v "private_key_file_pwd" connections.toml
 
       - name: Run schemachange for each object
-        env:
-          SCHEMAS_CHANGED: ${{ needs.detect-changes.outputs.schemas }}
-          TABLES_CHANGED: ${{ needs.detect-changes.outputs.tables }}
-          VIEWS_CHANGED: ${{ needs.detect-changes.outputs.views }}
-          PROCEDURES_CHANGED: ${{ needs.detect-changes.outputs.procedures }}
-          TASKS_CHANGED: ${{ needs.detect-changes.outputs.tasks }}
         run: |
           declare -A dirs=(
             ["01_schemas"]=$SCHEMAS_CHANGED
@@ -132,15 +134,17 @@ jobs:
     needs: detect-changes
     if: needs.detect-changes.outputs.terraform == 'true'
     runs-on: ubuntu-latest
+
+    env:
+      TF_VAR_admin_user: ${{ secrets.SF_USERNAME }}
+      SF_PRIVATE_KEY_B64: ${{ secrets.SF_PRIVATE_KEY_B64 }}
+      TF_VAR_private_key_passphrase: ${{ secrets.SF_PRIVATE_KEY_PASSPHRASE }}
     
     steps:
       - uses: actions/checkout@v4
       - uses: hashicorp/setup-terraform@v2
 
       - name: Prepare private key
-        env:
-          SF_PRIVATE_KEY_B64: ${{ secrets.SF_PRIVATE_KEY_B64 }}
-          TF_VAR_private_key_passphrase: ${{ secrets.SF_PRIVATE_KEY_PASSPHRASE }}
         run: |
           echo "$SF_PRIVATE_KEY_B64" | base64 --decode > $RUNNER_TEMP/snowflake_key.p8
           chmod 600 $RUNNER_TEMP/snowflake_key.p8

@@ -41,8 +41,58 @@ jobs:
             terraform:
               - 'terraform/**'
 
-  schema-change:
+  terraform:
     needs: detect-changes
+    runs-on: ubuntu-latest
+
+    env:
+      TF_VAR_admin_user: ${{ secrets.SF_USERNAME }}
+      SF_PRIVATE_KEY_B64: ${{ secrets.SF_PRIVATE_KEY_B64 }}
+      TF_VAR_private_key_passphrase: ${{ secrets.SF_PRIVATE_KEY_PASSPHRASE }}
+    
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v2
+        if: needs.detect-changes.outputs.terraform == 'true'
+
+      - name: Prepare private key
+        if: needs.detect-changes.outputs.terraform == 'true'
+        run: |
+          echo "$SF_PRIVATE_KEY_B64" | base64 --decode > $RUNNER_TEMP/snowflake_key.p8
+          chmod 600 $RUNNER_TEMP/snowflake_key.p8
+          echo "TF_VAR_admin_private_key_path=$RUNNER_TEMP/snowflake_key.p8" >> $GITHUB_ENV
+
+      - name: Terraform fmt
+        if: needs.detect-changes.outputs.terraform == 'true'
+        run: terraform fmt -check
+        working-directory: terraform
+
+      - name: Terraform init
+        if: needs.detect-changes.outputs.terraform == 'true'
+        run: terraform init
+        working-directory: terraform
+
+      - name: Terraform validate
+        if: needs.detect-changes.outputs.terraform == 'true'
+        run: terraform validate
+        working-directory: terraform
+
+      - name: Terraform plan
+        if: needs.detect-changes.outputs.terraform == 'true'
+        run: terraform plan
+        working-directory: terraform
+
+      - name: Terraform apply
+        if: needs.detect-changes.outputs.terraform == 'true' && inputs.dry_run == false
+        run: terraform apply -auto-approve
+        working-directory: terraform
+
+      - name: Skip - no Terraform changes
+        if: needs.detect-changes.outputs.terraform != 'true'
+        run: echo "No Terraform changes detected; skipping Terraform steps."
+
+  schema-change:
+    needs: [detect-changes, terraform]
     if: needs.detect-changes.outputs.migrations == 'true'
     runs-on: ubuntu-latest
     env:
@@ -129,44 +179,3 @@ jobs:
               eval "$cmd"
             fi
           done
-
-  terraform:
-    needs: detect-changes
-    if: needs.detect-changes.outputs.terraform == 'true'
-    runs-on: ubuntu-latest
-
-    env:
-      TF_VAR_admin_user: ${{ secrets.SF_USERNAME }}
-      SF_PRIVATE_KEY_B64: ${{ secrets.SF_PRIVATE_KEY_B64 }}
-      TF_VAR_private_key_passphrase: ${{ secrets.SF_PRIVATE_KEY_PASSPHRASE }}
-    
-    steps:
-      - uses: actions/checkout@v4
-      - uses: hashicorp/setup-terraform@v2
-
-      - name: Prepare private key
-        run: |
-          echo "$SF_PRIVATE_KEY_B64" | base64 --decode > $RUNNER_TEMP/snowflake_key.p8
-          chmod 600 $RUNNER_TEMP/snowflake_key.p8
-          echo "TF_VAR_admin_private_key_path=$RUNNER_TEMP/snowflake_key.p8" >> $GITHUB_ENV
-
-      - name: Terraform fmt
-        run: terraform fmt -check
-        working-directory: terraform
-
-      - name: Terraform init
-        run: terraform init
-        working-directory: terraform
-
-      - name: Terraform validate
-        run: terraform validate
-        working-directory: terraform
-
-      - name: Terraform plan
-        run: terraform plan
-        working-directory: terraform
-
-      - name: Terraform apply
-        if: ${{ inputs.dry_run == false }}
-        run: terraform apply -auto-approve
-        working-directory: terraform

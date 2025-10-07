@@ -34,15 +34,15 @@ jobs:
             migrations:
               - 'migrations/**'
             schemas:
-              - 'migrations/schemas/**'
+              - 'migrations/01_schemas/**'
             tables:
-              - 'migrations/tables/**'
+              - 'migrations/02_tables/**'
             views:
-              - 'migrations/views/**'
+              - 'migrations/03_views/**'
             procedures:
-              - 'migrations/procedures/**'
+              - 'migrations/04_procedures/**'
             tasks:
-              - 'migrations/tasks/**'
+              - 'migrations/05_tasks/**'
             terraform:
               - 'terraform/**'
 
@@ -108,7 +108,7 @@ jobs:
         if: needs.detect-changes.outputs.schemas == 'true'
         run: |
           schemachange deploy \
-            -f $GITHUB_WORKSPACE/migrations/schemas \
+            -f $GITHUB_WORKSPACE/migrations/01_schemas \
             -c $SNOWFLAKE_DATABASE.SCHEMACHANGE.CHANGE_HISTORY \
             --create-change-history-table \
             --connections-file $GITHUB_WORKSPACE/connections.toml \
@@ -119,7 +119,7 @@ jobs:
         if: needs.detect-changes.outputs.tables == 'true'
         run: |
           schemachange deploy \
-            -f $GITHUB_WORKSPACE/migrations/tables \
+            -f $GITHUB_WORKSPACE/migrations/02_tables \
             -c $SNOWFLAKE_DATABASE.SCHEMACHANGE.CHANGE_HISTORY \
             --create-change-history-table \
             --connections-file $GITHUB_WORKSPACE/connections.toml \
@@ -130,7 +130,7 @@ jobs:
         if: needs.detect-changes.outputs.views == 'true'
         run: |
           schemachange deploy \
-            -f $GITHUB_WORKSPACE/migrations/views \
+            -f $GITHUB_WORKSPACE/migrations/03_views \
             -c $SNOWFLAKE_DATABASE.SCHEMACHANGE.CHANGE_HISTORY \
             --create-change-history-table \
             --connections-file $GITHUB_WORKSPACE/connections.toml \
@@ -141,7 +141,7 @@ jobs:
         if: needs.detect-changes.outputs.procedures == 'true'
         run: |
           schemachange deploy \
-            -f $GITHUB_WORKSPACE/migrations/procedures \
+            -f $GITHUB_WORKSPACE/migrations/04_procedures \
             -c $SNOWFLAKE_DATABASE.SCHEMACHANGE.CHANGE_HISTORY \
             --create-change-history-table \
             --connections-file $GITHUB_WORKSPACE/connections.toml \
@@ -152,7 +152,7 @@ jobs:
         if: needs.detect-changes.outputs.tasks == 'true'
         run: |
           schemachange deploy \
-            -f $GITHUB_WORKSPACE/migrations/tasks \
+            -f $GITHUB_WORKSPACE/migrations/05_tasks \
             -c $SNOWFLAKE_DATABASE.SCHEMACHANGE.CHANGE_HISTORY \
             --create-change-history-table \
             --connections-file $GITHUB_WORKSPACE/connections.toml \

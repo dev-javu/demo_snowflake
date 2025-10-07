@@ -59,12 +59,6 @@ jobs:
         with:
           python-version: '3.8'
 
-      - name: Cache pip
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-
       - name: Prepare private key
         run: |
           echo "$SF_PRIVATE_KEY_B64" | base64 --decode > $RUNNER_TEMP/snowflake_key.p8
@@ -89,6 +83,16 @@ jobs:
           private_key_file = "${{ env.SNOWFLAKE_PRIVATE_KEY_PATH }}"
           private_key_file_pwd = "${{ env.SNOWFLAKE_PRIVATE_KEY_PASSPHRASE }}"
           EOF
+
+      - name: Fix connections.toml permissions
+        run: |
+          chmod 600 connections.toml
+          sudo chown $USER connections.toml || true
+
+      - name: Debug connections.toml
+        run: |
+          echo "Connections config (sanitized):"
+          grep -v "private_key_file_pwd" connections.toml
 
       - name: Run schemachange for each object
         env:
@@ -129,17 +133,11 @@ jobs:
     if: needs.detect-changes.outputs.terraform == 'true'
     runs-on: ubuntu-latest
     env:
-      TF_VAR_admin_user: ${{ secrets.SF_USERNAME }}
+      SF_PRIVATE_KEY_B64: ${{ secrets.SF_PRIVATE_KEY_B64 }}
       TF_VAR_private_key_passphrase: ${{ secrets.SF_PRIVATE_KEY_PASSPHRASE }}
     steps:
       - uses: actions/checkout@v4
       - uses: hashicorp/setup-terraform@v2
-
-      - name: Cache Terraform plugins
-        uses: actions/cache@v4
-        with:
-          path: ~/.terraform.d/plugin-cache
-          key: ${{ runner.os }}-terraform-${{ hashFiles('**/*.tf') }}
 
       - name: Prepare private key
         run: |

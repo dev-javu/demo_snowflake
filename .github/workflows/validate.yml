@@ -108,57 +108,62 @@ jobs:
       - name: Execute schemachange for schemas
         if: needs.detect-changes.outputs.schemas == 'true'
         run: |
-          schemachange --dry-run deploy \
+          schemachange deploy \
             -f $GITHUB_WORKSPACE/migrations/01_schemas \
             -c $SNOWFLAKE_DATABASE.SCHEMACHANGE.CHANGE_HISTORY \
             --create-change-history-table \
             --connections-file $GITHUB_WORKSPACE/connections.toml \
             --connection-name default \
             --verbose
+            --dry-run
 
       - name: Execute schemachange for tables
         if: needs.detect-changes.outputs.tables == 'true'
         run: |
-          schemachange --dry-run deploy \
+          schemachange deploy \
             -f $GITHUB_WORKSPACE/migrations/02_tables \
             -c $SNOWFLAKE_DATABASE.SCHEMACHANGE.CHANGE_HISTORY \
             --create-change-history-table \
             --connections-file $GITHUB_WORKSPACE/connections.toml \
             --connection-name default \
             --verbose
+            --dry-run
 
       - name: Execute schemachange for views
         if: needs.detect-changes.outputs.views == 'true'
         run: |
-          schemachange --dry-run deploy \
+          schemachange deploy \
             -f $GITHUB_WORKSPACE/migrations/03_views \
             -c $SNOWFLAKE_DATABASE.SCHEMACHANGE.CHANGE_HISTORY \
             --create-change-history-table \
             --connections-file $GITHUB_WORKSPACE/connections.toml \
             --connection-name default \
             --verbose
+            --dry-run
 
       - name: Execute schemachange for procedures
         if: needs.detect-changes.outputs.procedures == 'true'
         run: |
-          schemachange --dry-run deploy \
+          schemachange deploy \
             -f $GITHUB_WORKSPACE/migrations/04_procedures \
             -c $SNOWFLAKE_DATABASE.SCHEMACHANGE.CHANGE_HISTORY \
             --create-change-history-table \
             --connections-file $GITHUB_WORKSPACE/connections.toml \
             --connection-name default \
             --verbose
+            --dry-run
 
       - name: Execute schemachange for tasks
         if: needs.detect-changes.outputs.tasks == 'true'
         run: |
-          schemachange --dry-run deploy \
+          schemachange deploy \
             -f $GITHUB_WORKSPACE/migrations/05_tasks \
             -c $SNOWFLAKE_DATABASE.SCHEMACHANGE.CHANGE_HISTORY \
             --create-change-history-table \
             --connections-file $GITHUB_WORKSPACE/connections.toml \
             --connection-name default \
             --verbose
+            --dry-run
 
   terraform-job:
     needs: detect-changes

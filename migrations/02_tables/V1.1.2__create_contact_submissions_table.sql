@@ -1,3 +1,8 @@
+-- Create a table to store contact form submissions
+-- Ensures schema exists to avoid ordering issues in CI runs
+
+CREATE SCHEMA IF NOT EXISTS FIRST_SCHEMA;
+
 CREATE TABLE IF NOT EXISTS FIRST_SCHEMA.CONTACT_SUBMISSIONS (
   SUBMISSION_ID STRING DEFAULT UUID_STRING() NOT NULL,
   FULL_NAME STRING NOT NULL,

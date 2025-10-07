@@ -1,13 +1,14 @@
-name: Snowflake Schema Deploy
+name: Validate
 
 # Triggers the action based on branch and path.
 on:
-  push:
+  pull_request:
     branches:
       - main
     paths:
       - 'migrations/**'
       - 'terraform/**'
+    types: [opened, synchronize, reopened]
   workflow_dispatch:
 
 jobs:
@@ -99,7 +100,7 @@ jobs:
           chmod 600 connections.toml
           sudo chown $USER connections.toml || true
 
-      - name: Debug connections.toml
+      - name: Check connections.toml
         run: |
           echo "Connections config (sanitized):"
           grep -v "private_key_file_pwd" connections.toml
@@ -107,7 +108,7 @@ jobs:
       - name: Execute schemachange for schemas
         if: needs.detect-changes.outputs.schemas == 'true'
         run: |
-          schemachange deploy \
+          schemachange --dry-run deploy \
             -f $GITHUB_WORKSPACE/migrations/01_schemas \
             -c $SNOWFLAKE_DATABASE.SCHEMACHANGE.CHANGE_HISTORY \
             --create-change-history-table \
@@ -118,7 +119,7 @@ jobs:
       - name: Execute schemachange for tables
         if: needs.detect-changes.outputs.tables == 'true'
         run: |
-          schemachange deploy \
+          schemachange --dry-run deploy \
             -f $GITHUB_WORKSPACE/migrations/02_tables \
             -c $SNOWFLAKE_DATABASE.SCHEMACHANGE.CHANGE_HISTORY \
             --create-change-history-table \
@@ -129,7 +130,7 @@ jobs:
       - name: Execute schemachange for views
         if: needs.detect-changes.outputs.views == 'true'
         run: |
-          schemachange deploy \
+          schemachange --dry-run deploy \
             -f $GITHUB_WORKSPACE/migrations/03_views \
             -c $SNOWFLAKE_DATABASE.SCHEMACHANGE.CHANGE_HISTORY \
             --create-change-history-table \
@@ -140,7 +141,7 @@ jobs:
       - name: Execute schemachange for procedures
         if: needs.detect-changes.outputs.procedures == 'true'
         run: |
-          schemachange deploy \
+          schemachange --dry-run deploy \
             -f $GITHUB_WORKSPACE/migrations/04_procedures \
             -c $SNOWFLAKE_DATABASE.SCHEMACHANGE.CHANGE_HISTORY \
             --create-change-history-table \
@@ -151,7 +152,7 @@ jobs:
       - name: Execute schemachange for tasks
         if: needs.detect-changes.outputs.tasks == 'true'
         run: |
-          schemachange deploy \
+          schemachange --dry-run deploy \
             -f $GITHUB_WORKSPACE/migrations/05_tasks \
             -c $SNOWFLAKE_DATABASE.SCHEMACHANGE.CHANGE_HISTORY \
             --create-change-history-table \
@@ -198,4 +199,8 @@ jobs:
 
       - name: Terraform plan
         run: terraform plan
+        working-directory: terraform
+
+      - name: Terraform apply
+        run: terraform apply
         working-directory: terraform

@@ -132,14 +132,15 @@ jobs:
     needs: detect-changes
     if: needs.detect-changes.outputs.terraform == 'true'
     runs-on: ubuntu-latest
-    env:
-      SF_PRIVATE_KEY_B64: ${{ secrets.SF_PRIVATE_KEY_B64 }}
-      TF_VAR_private_key_passphrase: ${{ secrets.SF_PRIVATE_KEY_PASSPHRASE }}
+    
     steps:
       - uses: actions/checkout@v4
       - uses: hashicorp/setup-terraform@v2
 
       - name: Prepare private key
+        env:
+          SF_PRIVATE_KEY_B64: ${{ secrets.SF_PRIVATE_KEY_B64 }}
+          TF_VAR_private_key_passphrase: ${{ secrets.SF_PRIVATE_KEY_PASSPHRASE }}
         run: |
           echo "$SF_PRIVATE_KEY_B64" | base64 --decode > $RUNNER_TEMP/snowflake_key.p8
           chmod 600 $RUNNER_TEMP/snowflake_key.p8

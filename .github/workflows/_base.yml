@@ -1,0 +1,155 @@
+name: Base Workflow
+
+on:
+  workflow_call:
+    inputs:
+      dry_run:
+        description: "Execute on dry-run mode"
+        required: true
+        type: boolean
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      migrations: ${{ steps.filter.outputs.migrations }}
+      schemas: ${{ steps.filter.outputs.schemas }}
+      tables: ${{ steps.filter.outputs.tables }}
+      views: ${{ steps.filter.outputs.views }}
+      procedures: ${{ steps.filter.outputs.procedures }}
+      tasks: ${{ steps.filter.outputs.tasks }}
+      terraform: ${{ steps.filter.outputs.terraform }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Detect changed paths
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            migrations:
+              - 'migrations/**'
+            schemas:
+              - 'migrations/01_schemas/**'
+            tables:
+              - 'migrations/02_tables/**'
+            views:
+              - 'migrations/03_views/**'
+            procedures:
+              - 'migrations/04_procedures/**'
+            tasks:
+              - 'migrations/05_tasks/**'
+            terraform:
+              - 'terraform/**'
+
+  schema-change:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.migrations == 'true'
+    runs-on: ubuntu-latest
+    env:
+      SF_PRIVATE_KEY_B64: ${{ secrets.SF_PRIVATE_KEY_B64 }}
+      SNOWFLAKE_PRIVATE_KEY_PASSPHRASE: ${{ secrets.SF_PRIVATE_KEY_PASSPHRASE }}
+      SNOWFLAKE_ACCOUNT: ${{ secrets.SF_ACCOUNT }}
+      SNOWFLAKE_USERNAME: ${{ secrets.SF_USERNAME }}
+      SNOWFLAKE_ROLE: ${{ secrets.SF_ROLE }}
+      SNOWFLAKE_WAREHOUSE: ${{ secrets.SF_WAREHOUSE }}
+      SNOWFLAKE_DATABASE: ${{ secrets.SF_DATABASE }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.8'
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+
+      - name: Prepare private key
+        run: |
+          echo "$SF_PRIVATE_KEY_B64" | base64 --decode > $RUNNER_TEMP/snowflake_key.p8
+          chmod 600 $RUNNER_TEMP/snowflake_key.p8
+          echo "SNOWFLAKE_PRIVATE_KEY_PATH=$RUNNER_TEMP/snowflake_key.p8" >> $GITHUB_ENV
+
+      - name: Install schemachange
+        run: |
+          pip install --upgrade pip
+          pip install schemachange==4.0.1
+
+      - name: Create connections.toml
+        run: |
+          cat <<EOF > connections.toml
+          [default]
+          account = "${{ env.SNOWFLAKE_ACCOUNT }}"
+          user = "${{ env.SNOWFLAKE_USERNAME }}"
+          role = "${{ env.SNOWFLAKE_ROLE }}"
+          warehouse = "${{ env.SNOWFLAKE_WAREHOUSE }}"
+          database = "${{ env.SNOWFLAKE_DATABASE }}"
+          authenticator = "snowflake_jwt"
+          private_key_file = "${{ env.SNOWFLAKE_PRIVATE_KEY_PATH }}"
+          private_key_file_pwd = "${{ env.SNOWFLAKE_PRIVATE_KEY_PASSPHRASE }}"
+          EOF
+
+      - name: Run schemachange for each object
+        run: |
+          for folder in 01_schemas 02_tables 03_views 04_procedures 05_tasks; do
+            echo "Processing $folder..."
+            if [ "${{ needs.detect-changes.outputs[folder] }}" == "true" ]; then
+              cmd="schemachange deploy \
+                -f $GITHUB_WORKSPACE/migrations/$folder \
+                -c $SNOWFLAKE_DATABASE.SCHEMACHANGE.CHANGE_HISTORY \
+                --create-change-history-table \
+                --connections-file $GITHUB_WORKSPACE/connections.toml \
+                --connection-name default \
+                --verbose"
+              if [ "${{ inputs.dry_run }}" == "true" ]; then
+                cmd="$cmd --dry-run"
+              fi
+              echo "Running: $cmd"
+              eval "$cmd"
+            fi
+          done
+
+  terraform:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.terraform == 'true'
+    runs-on: ubuntu-latest
+    env:
+      TF_VAR_admin_user: ${{ secrets.SF_USERNAME }}
+      TF_VAR_private_key_passphrase: ${{ secrets.SF_PRIVATE_KEY_PASSPHRASE }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v2
+
+      - name: Cache Terraform plugins
+        uses: actions/cache@v4
+        with:
+          path: ~/.terraform.d/plugin-cache
+          key: ${{ runner.os }}-terraform-${{ hashFiles('**/*.tf') }}
+
+      - name: Prepare private key
+        run: |
+          echo "$SF_PRIVATE_KEY_B64" | base64 --decode > $RUNNER_TEMP/snowflake_key.p8
+          chmod 600 $RUNNER_TEMP/snowflake_key.p8
+          echo "TF_VAR_admin_private_key_path=$RUNNER_TEMP/snowflake_key.p8" >> $GITHUB_ENV
+
+      - name: Terraform fmt
+        run: terraform fmt -check
+        working-directory: terraform
+
+      - name: Terraform init
+        run: terraform init
+        working-directory: terraform
+
+      - name: Terraform validate
+        run: terraform validate
+        working-directory: terraform
+
+      - name: Terraform plan
+        run: terraform plan
+        working-directory: terraform
+
+      - name: Terraform apply
+        if: ${{ inputs.dry_run == false }}
+        run: terraform apply -auto-approve
+        working-directory: terraform

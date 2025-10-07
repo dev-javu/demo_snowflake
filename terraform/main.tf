@@ -13,15 +13,15 @@ provider "snowflake" {
   private_key_passphrase = var.private_key_passphrase
   authenticator          = "SNOWFLAKE_JWT"
   role                   = "ACCOUNTADMIN"
-  warehouse              = "DEMO_WH"
+  warehouse              = "COMPUTE_WH"
 }
 
 resource "snowflake_database" "tf_db" {
-  name         = "TF_DEMO_DB"
+  name         = "DEMO"
   is_transient = false
 }
 
-resource "snowflake_warehouse" "tf_warehouse" {
+/*resource "snowflake_warehouse" "tf_warehouse" {
   name                      = "TF_DEMO_WH"
   warehouse_type            = "STANDARD"
   warehouse_size            = "XSMALL"
@@ -134,4 +134,4 @@ resource "snowflake_grant_privileges_to_account_role" "grant_future_tables" {
       in_schema          = snowflake_schema.tf_db_tf_schema.fully_qualified_name
     }
   }
-}
+}*/

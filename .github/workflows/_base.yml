@@ -91,10 +91,24 @@ jobs:
           EOF
 
       - name: Run schemachange for each object
+        env:
+          SCHEMAS_CHANGED: ${{ needs.detect-changes.outputs.schemas }}
+          TABLES_CHANGED: ${{ needs.detect-changes.outputs.tables }}
+          VIEWS_CHANGED: ${{ needs.detect-changes.outputs.views }}
+          PROCEDURES_CHANGED: ${{ needs.detect-changes.outputs.procedures }}
+          TASKS_CHANGED: ${{ needs.detect-changes.outputs.tasks }}
         run: |
-          for folder in 01_schemas 02_tables 03_views 04_procedures 05_tasks; do
-            echo "Processing $folder..."
-            if [ "${{ needs.detect-changes.outputs[folder] }}" == "true" ]; then
+          declare -A dirs=(
+            ["01_schemas"]=$SCHEMAS_CHANGED
+            ["02_tables"]=$TABLES_CHANGED
+            ["03_views"]=$VIEWS_CHANGED
+            ["04_procedures"]=$PROCEDURES_CHANGED
+            ["05_tasks"]=$TASKS_CHANGED
+          )
+
+          for folder in "${!dirs[@]}"; do
+            if [ "${dirs[$folder]}" == "true" ]; then
+              echo "Deploying changes for $folder ..."
               cmd="schemachange deploy \
                 -f $GITHUB_WORKSPACE/migrations/$folder \
                 -c $SNOWFLAKE_DATABASE.SCHEMACHANGE.CHANGE_HISTORY \

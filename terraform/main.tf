@@ -49,17 +49,3 @@ resource "snowflake_database" "gold" {
   name         = "GOLD_DEV"
   is_transient = false
 }
-
-############################################
-# Schemachange change 
-############################################
-
-resource "snowflake_database" "schemachange" {
-  name         = "SCHEMACHANGE"
-  is_transient = false
-}
-
-resource "snowflake_schema" "schemachange" {
-  name     = "SCHEMACHANGE"
-  database = snowflake_database.schemachange.name
-}

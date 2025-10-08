@@ -16,9 +16,42 @@ provider "snowflake" {
   warehouse              = "COMPUTE_WH"
 }
 
-resource "snowflake_database" "tf_db" {
-  name         = "DEMO"
+############################################
+# Databases for bronze / silver / gold
+############################################
+
+resource "snowflake_database" "bronze" {
+  name         = "BRONZE"
   is_transient = false
+}
+
+resource "snowflake_database" "silver" {
+  name         = "SILVER"
+  is_transient = false
+}
+
+resource "snowflake_database" "gold" {
+  name         = "GOLD"
+  is_transient = false
+}
+
+############################################
+# Schemachange change history schema per DB
+############################################
+
+resource "snowflake_schema" "schemachange_bronze" {
+  name     = "SCHEMACHANGE"
+  database = snowflake_database.bronze.name
+}
+
+resource "snowflake_schema" "schemachange_silver" {
+  name     = "SCHEMACHANGE"
+  database = snowflake_database.silver.name
+}
+
+resource "snowflake_schema" "schemachange_gold" {
+  name     = "SCHEMACHANGE"
+  database = snowflake_database.gold.name
 }
 
 /*resource "snowflake_warehouse" "tf_warehouse" {

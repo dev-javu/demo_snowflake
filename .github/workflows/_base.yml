@@ -95,6 +95,11 @@ jobs:
     needs: [detect-changes, terraform]
     if: needs.detect-changes.outputs.migrations == 'true'
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        database: [BRONZE, SILVER, GOLD]
     env:
       SF_PRIVATE_KEY_B64: ${{ secrets.SF_PRIVATE_KEY_B64 }}
       SNOWFLAKE_PRIVATE_KEY_PASSPHRASE: ${{ secrets.SF_PRIVATE_KEY_PASSPHRASE }}
@@ -102,7 +107,7 @@ jobs:
       SNOWFLAKE_USERNAME: ${{ secrets.SF_USERNAME }}
       SNOWFLAKE_ROLE: ${{ secrets.SF_ROLE }}
       SNOWFLAKE_WAREHOUSE: ${{ secrets.SF_WAREHOUSE }}
-      SNOWFLAKE_DATABASE: ${{ secrets.SF_DATABASE }}
+      SNOWFLAKE_DATABASE: ${{ matrix.database }}
       SCHEMAS_CHANGED: ${{ needs.detect-changes.outputs.schemas }}
       TABLES_CHANGED: ${{ needs.detect-changes.outputs.tables }}
       VIEWS_CHANGED: ${{ needs.detect-changes.outputs.views }}

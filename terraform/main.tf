@@ -35,17 +35,17 @@ resource "snowflake_database" "gold" {
   is_transient = false
 }
 
-resource "snowflake_database" "bronze" {
+resource "snowflake_database" "bronze_dev" {
   name         = "BRONZE_DEV"
   is_transient = false
 }
 
-resource "snowflake_database" "silver" {
+resource "snowflake_database" "silver_dev" {
   name         = "SILVER_DEV"
   is_transient = false
 }
 
-resource "snowflake_database" "gold" {
+resource "snowflake_database" "gold_dev" {
   name         = "GOLD_DEV"
   is_transient = false
 }

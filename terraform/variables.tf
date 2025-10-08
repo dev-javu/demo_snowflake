@@ -25,3 +25,15 @@ variable "private_key_passphrase" {
   description = "Passphrase for the private key used with Snowflake JWT authentication."
   sensitive   = true
 }
+
+variable "admin_role" {
+  type        = string
+  description = "Snowflake role Terraform uses for operations."
+  default     = "ACCOUNTADMIN"
+}
+
+variable "warehouse" {
+  type        = string
+  description = "Default Snowflake warehouse to use."
+  default     = "COMPUTE_WH"
+}

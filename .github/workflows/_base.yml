@@ -43,6 +43,7 @@ jobs:
 
   terraform:
     needs: detect-changes
+    if: needs.detect-changes.outputs.terraform == 'true' && ((github.event_name == 'pull_request' && github.base_ref == 'production') || (github.event_name != 'pull_request' && github.ref_name == 'production'))
     runs-on: ubuntu-latest
 
     env:

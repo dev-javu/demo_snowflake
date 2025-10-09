@@ -19,7 +19,7 @@ provider "snowflake" {
 ############################################
 # Databases for bronze / silver / gold
 ############################################
-
+/*
 resource "snowflake_database" "bronze" {
   name         = "BRONZE"
   is_transient = false
@@ -49,3 +49,4 @@ resource "snowflake_database" "gold_dev" {
   name         = "GOLD_DEV"
   is_transient = false
 }
+*/
